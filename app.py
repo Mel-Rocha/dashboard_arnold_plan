@@ -17,7 +17,7 @@ def home():
 
 @app.route('/dashboard/taco-data', methods=['GET'])
 def get_taco_data():
-    url = f"{BASE_URL}/taco/taco/"  # Constrói a URL completa
+    url = f"{BASE_URL}/taco/taco/all/"  # Constrói a URL completa
 
     headers = {
         "Authorization": f"Bearer {AUTH_TOKEN}"
@@ -55,7 +55,7 @@ def setup_dash(app):
     )
     def update_nutritional_values_graph(n_intervals):
         try:
-            response = requests.get(f"{BASE_URL}/taco/taco/", headers={"Authorization": f"Bearer {AUTH_TOKEN}"})
+            response = requests.get(f"{BASE_URL}/taco/taco/all/", headers={"Authorization": f"Bearer {AUTH_TOKEN}"})
             response.raise_for_status()
             data = response.json()
             df = pd.DataFrame(data['results'])
@@ -78,7 +78,7 @@ def setup_dash(app):
     )
     def update_category_distribution_graph(n_intervals):
         try:
-            response = requests.get(f"{BASE_URL}/taco/taco/", headers={"Authorization": f"Bearer {AUTH_TOKEN}"})
+            response = requests.get(f"{BASE_URL}/taco/taco/all/", headers={"Authorization": f"Bearer {AUTH_TOKEN}"})
             response.raise_for_status()
             data = response.json()
             df = pd.DataFrame(data['results'])
