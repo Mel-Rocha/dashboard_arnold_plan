@@ -4,6 +4,7 @@ from flask import Flask, render_template_string
 from apps.taco import setup_taco_dashboard
 from apps.diet_macors_sheets import setup_diet_macros_sheets_dashboard
 from apps.meal_macros_sheets import setup_meal_macros_sheets_dashboard
+from apps.daiily_records import setup_daily_records_dashboard
 
 app = Flask(__name__)
 
@@ -11,6 +12,7 @@ app = Flask(__name__)
 setup_taco_dashboard(app)
 setup_diet_macros_sheets_dashboard(app)
 setup_meal_macros_sheets_dashboard(app)
+setup_daily_records_dashboard(app)
 
 @app.route('/')
 def home():
