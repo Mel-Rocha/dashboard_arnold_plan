@@ -3,6 +3,8 @@ import plotly.express as px
 import pandas as pd
 import requests
 from dotenv import load_dotenv
+import dash_table
+
 
 import os
 
@@ -27,7 +29,7 @@ def setup_daily_records_dashboard(app):
         html.H2("Tabela de Aderência"),
         html.Div(id='adherence-table'),
         html.H2("Insight sobre Aderência ao Plano"),
-        html.Div(id='adherence-insight'),
+        html.Div(id='adherence-insight', style={'font-size': '20px', 'font-weight': 'bold'}),
         dcc.Interval(
             id='interval-component',
             interval=10 * 60 * 1000,  # Atualiza a cada 10 minutos
@@ -79,31 +81,46 @@ def setup_daily_records_dashboard(app):
             feeling_status_fig.update_xaxes(dtick="D", tickformat="%b %d %Y")
             appetite_status_fig.update_xaxes(dtick="D", tickformat="%b %d %Y")
 
-            # Atualizar o layout dos gráficos para garantir que todos os dias sejam mostrados no eixo x
-            meal_status_fig.update_xaxes(dtick="D", tickformat="%b %d %Y")
-            feeling_status_fig.update_xaxes(dtick="D", tickformat="%b %d %Y")
-            appetite_status_fig.update_xaxes(dtick="D", tickformat="%b %d %Y")
-
-            # Tabela de resumo de refeições (concluídas, não concluídas)
+            # Tabela de resumo de refeições (concluídas, não concluídas) usando dash_table
             adherence_summary = df.groupby('meal_status').size().reset_index(name='count')
-            adherence_table = html.Table([
-                html.Thead(html.Tr([html.Th("Status da Refeição"), html.Th("Contagem")])),
-                html.Tbody([html.Tr([html.Td(status), html.Td(count)]) for status, count in
-                            zip(adherence_summary['meal_status'], adherence_summary['count'])])
-            ])
+
+            adherence_table = dash_table.DataTable(
+                columns=[
+                    {"name": "Status da Refeição", "id": "meal_status"},
+                    {"name": "Contagem", "id": "count"}
+                ],
+                data=adherence_summary.to_dict('records'),
+                style_cell={'textAlign': 'center', 'padding': '5px'},
+                style_header={
+                    'backgroundColor': 'rgb(230, 230, 230)',
+                    'fontWeight': 'bold',
+                    'textAlign': 'center'
+                },
+                style_data_conditional=[
+                    {'if': {'row_index': 'odd'}, 'backgroundColor': 'rgb(248, 248, 248)'},
+                    {'if': {'filter_query': '{meal_status} = "done"'}, 'backgroundColor': 'lightgreen'},
+                    {'if': {'filter_query': '{meal_status} = "not_done"'}, 'backgroundColor': 'lightcoral'},
+                    {'if': {'filter_query': '{meal_status} = "partially_done"'}, 'backgroundColor': 'lightyellow'},
+                ]
+            )
 
             # Ajustar o cálculo de adesão ao plano:
             total_meals = len(df)
-            completed_meals = len(
-                df[df['meal_status'] == 'done'])  # Considerando apenas as refeições com status "done" como concluídas
+            completed_meals = len(df[df['meal_status'] == 'done'])
 
             adherence_percentage = (completed_meals / total_meals) * 100
 
             # Definir o insight com base na porcentagem de refeições concluídas
-            if adherence_percentage >= 80:  # Critério: Mais de 80% das refeições foram concluídas
-                adherence_insight = f"O atleta está aderindo bem ao plano. {adherence_percentage:.2f}% das refeições foram concluídas."
+            if adherence_percentage >= 80:  # Mais de 80% das refeições foram concluídas
+                adherence_insight = html.Div(
+                    f"O atleta está aderindo bem ao plano. {adherence_percentage:.2f}% das refeições foram concluídas.",
+                    style={'color': 'green'}
+                )
             else:
-                adherence_insight = f"O atleta não está aderindo ao plano. Apenas {adherence_percentage:.2f}% das refeições foram concluídas."
+                adherence_insight = html.Div(
+                    f"O atleta não está aderindo ao plano. Apenas {adherence_percentage:.2f}% das refeições foram concluídas.",
+                    style={'color': 'red'}
+                )
 
             return meal_status_fig, feeling_status_fig, appetite_status_fig, adherence_table, adherence_insight
         except Exception as e:
