@@ -1,6 +1,6 @@
 from flask import Flask, jsonify, request
 import requests
-from dash import Dash, dcc, html
+from dash import Dash, dcc, html, Input, Output
 import dash
 import plotly.express as px
 import pandas as pd
@@ -40,7 +40,6 @@ def setup_dash(app):
 
     dash_app.layout = html.Div([
         html.H1("Dashboard Taco"),
-        dcc.Graph(id='nutritional-values-graph'),
         dcc.Graph(id='category-distribution-graph'),
         dcc.Interval(
             id='interval-component',
@@ -50,31 +49,8 @@ def setup_dash(app):
     ])
 
     @dash_app.callback(
-        dash.dependencies.Output('nutritional-values-graph', 'figure'),
-        dash.dependencies.Input('interval-component', 'n_intervals')
-    )
-    def update_nutritional_values_graph(n_intervals):
-        try:
-            response = requests.get(f"{BASE_URL}/taco/taco/all/", headers={"Authorization": f"Bearer {AUTH_TOKEN}"})
-            response.raise_for_status()
-            data = response.json()
-            df = pd.DataFrame(data['results'])
-
-            # Criar gráfico de barras para valores nutricionais
-            fig = px.bar(df,
-                         x='food_description',
-                         y=['moisture', 'energy_kcal', 'protein', 'lipids', 'cholesterol', 'carbohydrates',
-                            'dietary_fiber', 'ashes'],
-                         title="Valores Nutricionais dos Alimentos",
-                         labels={"value": "Valor", "food_description": "Descrição do Alimento"})
-            fig.update_layout(barmode='group')
-            return fig
-        except Exception as e:
-            return px.bar(title=f"Error: {str(e)}")
-
-    @dash_app.callback(
-        dash.dependencies.Output('category-distribution-graph', 'figure'),
-        dash.dependencies.Input('interval-component', 'n_intervals')
+        Output('category-distribution-graph', 'figure'),
+        Input('interval-component', 'n_intervals')
     )
     def update_category_distribution_graph(n_intervals):
         try:
