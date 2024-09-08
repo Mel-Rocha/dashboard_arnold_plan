@@ -98,7 +98,6 @@ def setup_daily_records_dashboard(app):
             if start_date and end_date:
                 df = df[(df['date'] >= start_date) & (df['date'] <= end_date)]
 
-            # Verifica se existem refeições disponíveis após a filtragem de data
             if df.empty:
                 return px.bar(
                     title="Sem dados disponíveis no intervalo de datas selecionado."), px.bar(), px.bar(), html.Div(
@@ -107,24 +106,60 @@ def setup_daily_records_dashboard(app):
             # Atualizar o dropdown de refeições com base nos dados filtrados por data
             meal_options = [{'label': f'Refeição {meal}', 'value': meal} for meal in df['meal'].unique()]
 
-            # Se refeições foram selecionadas, filtrar o DataFrame pelas refeições
             if selected_meals:
                 df = df[df['meal'].isin(selected_meals)]
 
-            # Formatar a data como 'dd/mm/yyyy'
+            # Traduções para português
+            status_translation = {
+                'done': 'Concluído',
+                'partially_done': 'Parcialmente Concluído',
+                'not_done': 'Não Concluído'
+            }
+
+            feeling_translation = {
+                'happy': 'Feliz',
+                'quiet': 'Tranquilo',
+                'normal': 'Normal',
+                'sad': 'Triste',
+                'anger': 'Raiva',
+                'anxiety': 'Ansiedade',
+                'fear': 'Medo'
+            }
+
+            appetite_translation = {
+                'hunger': 'Fome',
+                'desire_to_eat': 'Desejo de Comer',
+                'satisfied': 'Satisfeito',
+                'stew': 'Empanturrado'
+            }
+
+            # Aplicar as traduções no DataFrame
+            df['meal_status'] = df['meal_status'].map(status_translation)
+            df['feeling_status'] = df['feeling_status'].map(feeling_translation)
+            df['appetite_status'] = df['appetite_status'].map(appetite_translation)
+
+            # Cores para Meal Status
+            meal_status_colors = {
+                'Concluído': 'green',
+                'Parcialmente Concluído': 'yellow',
+                'Não Concluído': 'red'
+            }
+
+            # Formatar a data
             df['formatted_date'] = df['date'].dt.strftime('%d/%m/%Y')
 
-            # Gráfico 1: Meal Status ao longo dos dias
+            # Gráfico 1: Status das Refeições
             meal_status_fig = px.bar(df, x='formatted_date', y='meal', color='meal_status',
-                                     title="Meal Status por Dia", barmode='stack')
+                                     title="Status das Refeições por Dia", barmode='stack',
+                                     color_discrete_map=meal_status_colors)
 
-            # Gráfico 2: Feeling Status ao longo dos dias
+            # Gráfico 2: Status dos Sentimentos
             feeling_status_fig = px.bar(df, x='formatted_date', y='meal', color='feeling_status',
-                                        title="Feeling Status por Dia", barmode='group')
+                                        title="Status de Sentimentos por Dia", barmode='group')
 
-            # Gráfico 3: Appetite Status ao longo dos dias
+            # Gráfico 3: Status do Apetite
             appetite_status_fig = px.bar(df, x='formatted_date', y='meal', color='appetite_status',
-                                         title="Appetite Status por Dia", barmode='group')
+                                         title="Status do Apetite por Dia", barmode='group')
 
             # Tabela de resumo de aderência
             adherence_summary = df.groupby('meal_status').size().reset_index(name='count')
@@ -136,9 +171,8 @@ def setup_daily_records_dashboard(app):
 
             # Calcular aderência ao plano
             total_meals = len(df)
-            completed_meals = len(df[df['meal_status'] == 'done'])
+            completed_meals = len(df[df['meal_status'] == 'Concluído'])
 
-            # Prevenir divisão por zero
             adherence_percentage = (completed_meals / total_meals * 100) if total_meals > 0 else 0
 
             if adherence_percentage >= 80:
@@ -151,13 +185,13 @@ def setup_daily_records_dashboard(app):
                     style={'color': 'red'})
 
             # Geração de insights detalhados
-            meal_insight = df[df['meal_status'] == 'not_done']['meal'].mode()
+            meal_insight = df[df['meal_status'] == 'Não Concluído']['meal'].mode()
             meal_insight_text = f"A refeição com maior taxa de não conclusão é a Refeição {meal_insight.iloc[0]}." if not meal_insight.empty else "Nenhuma refeição não concluída."
 
-            common_feeling = df[df['meal_status'] == 'not_done']['feeling_status'].mode()
+            common_feeling = df[df['meal_status'] == 'Não Concluído']['feeling_status'].mode()
             feeling_insight_text = f"O sentimento mais comum nas refeições não concluídas é {common_feeling.iloc[0]}." if not common_feeling.empty else "Sentimento não disponível."
 
-            common_appetite = df[df['meal_status'] == 'not_done']['appetite_status'].mode()
+            common_appetite = df[df['meal_status'] == 'Não Concluído']['appetite_status'].mode()
             appetite_insight_text = f"O apetite mais comum durante refeições não concluídas é {common_appetite.iloc[0]}." if not common_appetite.empty else "Apetite não disponível."
 
             detailed_insights = html.Div([
