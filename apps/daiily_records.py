@@ -18,11 +18,11 @@ AUTH_TOKEN = os.getenv("AUTH_TOKEN")
 
 def setup_daily_records_dashboard(app):
     dash_app = Dash(__name__, server=app, url_base_pathname='/dashboard/daily-records/',
-                    external_stylesheets=[dbc.themes.BOOTSTRAP])
+                    external_stylesheets=[dbc.themes.DARKLY])  # Tema dark para Bootstrap
 
     # Layout do Dashboard
     dash_app.layout = dbc.Container([
-        dbc.Row(dbc.Col(html.H1("Daily Records Dashboard", className="text-center"), width={"size": 6, "offset": 3})),
+        dbc.Row(dbc.Col(html.H1("Daily Records Dashboard", className="text-center text-light"), width={"size": 6, "offset": 3})),
 
         dbc.Row([
             dbc.Col(dcc.DatePickerRange(
@@ -30,12 +30,14 @@ def setup_daily_records_dashboard(app):
                 start_date=pd.to_datetime('today').strftime('%Y-%m-%d'),
                 end_date=pd.to_datetime('today').strftime('%Y-%m-%d'),
                 display_format='YYYY-MM-DD',
-                max_date_allowed=datetime.today().strftime('%Y-%m-%d')  # Desabilitar datas futuras
+                max_date_allowed=datetime.today().strftime('%Y-%m-%d'),  # Desabilitar datas futuras
+                style={'backgroundColor': '#333333', 'color': 'white'}
             ), width=4),
             dbc.Col(dcc.Dropdown(
                 id='meal-dropdown',
                 multi=True,
-                placeholder='Selecione as Refeições'
+                placeholder='Selecione as Refeições',
+                style={'backgroundColor': '#333333', 'color': 'white'}
             ), width=4)
         ], className="mb-4"),
 
@@ -46,17 +48,17 @@ def setup_daily_records_dashboard(app):
         ], className="mb-4"),
 
         dbc.Row([
-            dbc.Col(html.H2("Tabela de Aderência"), width=12),
+            dbc.Col(html.H2("Tabela de Aderência", className="text-light"), width=12),
             dbc.Col(html.Div(id='adherence-table'), width=12)
         ], className="mb-4"),
 
         dbc.Row([
-            dbc.Col(html.H2("Insight sobre Aderência ao Plano"), width=12),
+            dbc.Col(html.H2("Insight sobre Aderência ao Plano", className="text-light"), width=12),
             dbc.Col(html.Div(id='adherence-insight'), width=12)
         ], className="mb-4"),
 
         dbc.Row([
-            dbc.Col(html.H2("Insights Detalhados"), width=12),
+            dbc.Col(html.H2("Insights Detalhados", className="text-light"), width=12),
             dbc.Col(html.Div(id='detailed-insights'), width=12)
         ], className="mb-4"),
 
@@ -65,7 +67,7 @@ def setup_daily_records_dashboard(app):
             interval=10 * 60 * 1000,  # Atualiza a cada 10 minutos
             n_intervals=0
         )
-    ], fluid=True)
+    ], fluid=True, style={'backgroundColor': '#1e1e1e'})  # Cor de fundo do layout
 
     # Callback para atualizar os gráficos e tabelas
     @dash_app.callback(
@@ -100,7 +102,8 @@ def setup_daily_records_dashboard(app):
 
             if df.empty:
                 return px.bar(
-                    title="Sem dados disponíveis no intervalo de datas selecionado."), px.bar(), px.bar(), html.Div(
+                    title="Sem dados disponíveis no intervalo de datas selecionado.", template='plotly_dark'), px.bar(
+                    template='plotly_dark'), px.bar(template='plotly_dark'), html.Div(
                     "Nenhum dado disponível."), "Nenhum dado para calcular aderência.", "Sem insights detalhados.", [], selected_meals
 
             # Atualizar o dropdown de refeições com base nos dados filtrados por data
@@ -156,19 +159,19 @@ def setup_daily_records_dashboard(app):
             # Formatar a data
             df['formatted_date'] = df['date'].dt.strftime('%d/%m/%Y')
 
-            # Gráfico 1: Status das Refeições (já existente e sem alterações)
+            # Gráfico 1: Status das Refeições (modo dark)
             meal_status_fig = px.bar(df, x='formatted_date', y='meal', color='meal_status',
                                      title="Status das Refeições por Dia", barmode='stack',
-                                     color_discrete_map=meal_status_colors)
+                                     color_discrete_map=meal_status_colors, template='plotly_dark')
 
-            # Gráfico 2: Status dos Sentimentos (sem alteração de cores)
+            # Gráfico 2: Status dos Sentimentos (modo dark)
             feeling_status_fig = px.bar(df, x='formatted_date', y='meal', color='feeling_status',
-                                        title="Status de Sentimentos por Dia", barmode='group')
+                                        title="Status de Sentimentos por Dia", barmode='group', template='plotly_dark')
 
-            # Gráfico 3: Status do Apetite (com cores ajustadas)
+            # Gráfico 3: Status do Apetite (modo dark)
             appetite_status_fig = px.bar(df, x='formatted_date', y='meal', color='appetite_status',
                                          title="Status do Apetite por Dia", barmode='group',
-                                         color_discrete_map=appetite_status_colors)
+                                         color_discrete_map=appetite_status_colors, template='plotly_dark')
 
             # Tabela de resumo de aderência
             adherence_summary = df.groupby('meal_status').size().reset_index(name='count')
@@ -176,7 +179,7 @@ def setup_daily_records_dashboard(app):
                 html.Thead(html.Tr([html.Th("Status da Refeição"), html.Th("Contagem")])),
                 html.Tbody([html.Tr([html.Td(status), html.Td(count)]) for status, count in
                             zip(adherence_summary['meal_status'], adherence_summary['count'])])
-            ])
+            ], style={'color': 'white'})
 
             # Calcular aderência ao plano
             total_meals = len(df)
@@ -201,18 +204,18 @@ def setup_daily_records_dashboard(app):
             feeling_insight_text = f"O sentimento mais comum nas refeições não concluídas é {common_feeling.iloc[0]}." if not common_feeling.empty else "Sentimento não disponível."
 
             common_appetite = df[df['meal_status'] == 'Não Concluído']['appetite_status'].mode()
-            appetite_insight_text = f"O apetite mais comum durante refeições não concluídas é {common_appetite.iloc[0]}." if not common_appetite.empty else "Apetite não disponível."
+            appetite_insight_text = f"O status de apetite mais comum nas refeições não concluídas é {common_appetite.iloc[0]}." if not common_appetite.empty else "Status de apetite não disponível."
 
             detailed_insights = html.Div([
-                html.H3("Insights Detalhados"),
                 html.P(meal_insight_text),
                 html.P(feeling_insight_text),
-                html.P(appetite_insight_text),
-            ])
+                html.P(appetite_insight_text)
+            ], style={'color': 'white'})
 
             return meal_status_fig, feeling_status_fig, appetite_status_fig, adherence_table, adherence_insight, detailed_insights, meal_options, selected_meals
 
-        except Exception as e:
-            error_fig = px.bar(title=f"Error: {str(e)}")
-            error_table = html.Div(f"Erro ao gerar tabela: {str(e)}")
-            return error_fig, error_fig, error_fig, error_table, f"Erro ao gerar insight: {str(e)}", f"Erro ao gerar insights detalhados: {str(e)}", [], selected_meals
+        except requests.RequestException as e:
+            print(f"Erro ao buscar os dados: {e}")
+            return px.bar(template='plotly_dark'), px.bar(template='plotly_dark'), px.bar(
+                template='plotly_dark'), html.Div(
+                "Erro ao buscar dados."), "Erro ao calcular aderência.", "Erro ao gerar insights.", [], selected_meals
