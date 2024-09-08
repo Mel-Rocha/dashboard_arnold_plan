@@ -37,7 +37,7 @@ def setup_daily_records_dashboard(app):
                 id='meal-dropdown',
                 multi=True,
                 placeholder='Selecione as Refeições',
-                style={'backgroundColor': '#333333', 'color': 'white'}
+                style={'backgroundColor': '#333333', 'color': 'black'}
             ), width=4)
         ], className="mb-4"),
 
