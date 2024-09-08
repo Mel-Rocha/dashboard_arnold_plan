@@ -22,7 +22,7 @@ def setup_daily_records_dashboard(app):
 
     # Layout do Dashboard
     dash_app.layout = dbc.Container([
-        dbc.Row(dbc.Col(html.H1("Daily Records Dashboard", className="text-center text-light"), width={"size": 6, "offset": 3})),
+        dbc.Row(dbc.Col(html.H1("Registros Diários Dashboard", className="text-center text-light"), width={"size": 6, "offset": 3})),
 
         dbc.Row([
             dbc.Col(dcc.DatePickerRange(
@@ -162,16 +162,19 @@ def setup_daily_records_dashboard(app):
             # Gráfico 1: Status das Refeições (modo dark)
             meal_status_fig = px.bar(df, x='formatted_date', y='meal', color='meal_status',
                                      title="Status das Refeições por Dia", barmode='stack',
-                                     color_discrete_map=meal_status_colors, template='plotly_dark')
+                                     color_discrete_map=meal_status_colors, template='plotly_dark',
+                                     labels={'meal_status': 'Conclusão das Refeições'})  # Legenda modificada
 
             # Gráfico 2: Status dos Sentimentos (modo dark)
             feeling_status_fig = px.bar(df, x='formatted_date', y='meal', color='feeling_status',
-                                        title="Status de Sentimentos por Dia", barmode='group', template='plotly_dark')
+                                        title="Status de Sentimentos por Dia", barmode='group', template='plotly_dark',
+                                        labels={'feeling_status': 'Sentimentos'})  # Legenda modificada
 
             # Gráfico 3: Status do Apetite (modo dark)
             appetite_status_fig = px.bar(df, x='formatted_date', y='meal', color='appetite_status',
                                          title="Status do Apetite por Dia", barmode='group',
-                                         color_discrete_map=appetite_status_colors, template='plotly_dark')
+                                         color_discrete_map=appetite_status_colors, template='plotly_dark',
+                                         labels={'appetite_status': 'Apetite'})
 
             # Tabela de resumo de aderência
             adherence_summary = df.groupby('meal_status').size().reset_index(name='count')
