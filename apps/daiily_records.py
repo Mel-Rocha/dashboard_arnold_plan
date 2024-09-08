@@ -145,21 +145,30 @@ def setup_daily_records_dashboard(app):
                 'Não Concluído': 'red'
             }
 
+            # Cores para Appetite Status
+            appetite_status_colors = {
+                'Desejo de Comer': 'pink',
+                'Satisfeito': 'purple',
+                'Empanturrado': 'yellow',
+                'Fome': 'lightgreen'
+            }
+
             # Formatar a data
             df['formatted_date'] = df['date'].dt.strftime('%d/%m/%Y')
 
-            # Gráfico 1: Status das Refeições
+            # Gráfico 1: Status das Refeições (já existente e sem alterações)
             meal_status_fig = px.bar(df, x='formatted_date', y='meal', color='meal_status',
                                      title="Status das Refeições por Dia", barmode='stack',
                                      color_discrete_map=meal_status_colors)
 
-            # Gráfico 2: Status dos Sentimentos
+            # Gráfico 2: Status dos Sentimentos (sem alteração de cores)
             feeling_status_fig = px.bar(df, x='formatted_date', y='meal', color='feeling_status',
                                         title="Status de Sentimentos por Dia", barmode='group')
 
-            # Gráfico 3: Status do Apetite
+            # Gráfico 3: Status do Apetite (com cores ajustadas)
             appetite_status_fig = px.bar(df, x='formatted_date', y='meal', color='appetite_status',
-                                         title="Status do Apetite por Dia", barmode='group')
+                                         title="Status do Apetite por Dia", barmode='group',
+                                         color_discrete_map=appetite_status_colors)
 
             # Tabela de resumo de aderência
             adherence_summary = df.groupby('meal_status').size().reset_index(name='count')
