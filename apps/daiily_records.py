@@ -57,18 +57,22 @@ def setup_daily_records_dashboard(app):
 
             # Converter a coluna 'date' para o formato datetime
             df['date'] = pd.to_datetime(df['date'])
+
+            # Formatar a data como 'dd/mm/yyyy'
+            df['formatted_date'] = df['date'].dt.strftime('%d/%m/%Y')
+
             df['meal'] = df['meal'].astype('category').cat.codes + 1
 
             # Gráfico 1: Meal Status ao longo dos dias
-            meal_status_fig = px.bar(df, x='date', y='meal', color='meal_status',
+            meal_status_fig = px.bar(df, x='formatted_date', y='meal', color='meal_status',
                                      title="Meal Status por Dia", barmode='stack')
 
             # Gráfico 2: Feeling Status ao longo dos dias
-            feeling_status_fig = px.bar(df, x='date', y='meal', color='feeling_status',
+            feeling_status_fig = px.bar(df, x='formatted_date', y='meal', color='feeling_status',
                                         title="Feeling Status por Dia", barmode='group')
 
             # Gráfico 3: Appetite Status ao longo dos dias
-            appetite_status_fig = px.bar(df, x='date', y='meal', color='appetite_status',
+            appetite_status_fig = px.bar(df, x='formatted_date', y='meal', color='appetite_status',
                                          title="Appetite Status por Dia", barmode='group')
 
             # Tabela de resumo de aderência
